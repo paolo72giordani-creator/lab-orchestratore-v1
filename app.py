@@ -5,10 +5,10 @@ from docx import Document
 import io
 import re
 
-st.set_page_config(page_title="Orchestratore IA Parallelo", page_icon="⚡", layout="centered")
+st.set_page_config(page_title="Orchestratore IA Personalizzabile", page_icon="⚡", layout="centered")
 
-st.title("⚡ Orchestratore Multi-Agente in Parallelo")
-st.write("Esecuzione simultanea di agenti specializzati con sintesi coordinata e generazione documento Word.")
+st.title("⚡ Orchestratore Multi-Agente con Aree di Indagine Scelte")
+st.write("Personalizza i ruoli dei tre agenti in parallelo e lascia che l'Editor crei un articolo ampio ed esaustivo.")
 
 # --- SIDEBAR CONFIGURAZIONE ---
 with st.sidebar:
@@ -20,7 +20,15 @@ with st.sidebar:
         index=0
     )
 
-tema = st.text_input("🎯 Inserisci il tema centrale:", "L'uso degli Agenti IA nella didattica inclusiva")
+tema = st.text_input("🎯 Tema centrale dell'indagine:", "L'uso degli Agenti IA nella didattica inclusiva")
+
+st.markdown("---")
+st.subheader("🕵️‍♂️ Personalizza le 3 Aree di Indagine in Parallelo")
+st.write("Definisci cosa deve approfondire ciascun agente:")
+
+focus_1 = st.text_input("Angolazione Agente 1", "Impatto pedagogico e metacognitivo sugli studenti")
+focus_2 = st.text_input("Angolazione Agente 2", "Riferimenti normativi, privacy e inclusione (BES/DSA)")
+focus_3 = st.text_input("Angolazione Agente 3", "Esempi pratici, operativi e laboratoriali per la classe")
 
 # --- FUNZIONE AUSILIARIA PER CHIAMARE OPENROUTER ---
 def chiama_agente(prompt_sistema, prompt_utente, api_key_val, modello_val):
@@ -59,108 +67,115 @@ def append_markdown_to_docx(doc, text):
                     p.add_run(part)
 
 # --- AVVIO DELL'ORCHESTRATORE PARALLELO ---
-if st.button("🚀 Avvia Orchestratore in Parallelo", type="primary"):
+if st.button("🚀 Avvia Orchestratore su Misura", type="primary"):
     if not api_key or not tema:
-        st.error("⚠️ Inserisci la tua API Key di OpenRouter e il tema.")
+        st.error("⚠️ Inserisci la tua API Key di OpenRouter e il tema centrale.")
     else:
-        with st.spinner("⚡ L'orchestratore ha avviato i processi in parallelo (Pedagogico, Normativo, Operativo)..."):
+        with st.spinner("⚡ I tre agenti stanno lavorando in parallelo sulle angolazioni scelte..."):
             
-            # 1. DEFINIZIONE DEI TASK PER I 3 AGENTI IN CONTEMPORANEA
-            task_pedagogico = (
-                "Sei un Esperto di Pedagogia.",
-                f"Analizza il tema '{tema}' individuando i benefici e l'impatto sull'apprendimento. Usa il grassetto per i concetti chiave."
+            # 1. COSTRUZIONE DINAMICA DEI TASK USANDO LE SCELTE DELL'UTENTE
+            task_1 = (
+                f"Sei un esperto focalizzato su: {focus_1}.",
+                f"Analizza il tema '{tema}' approfondendo rigorosamente questo aspetto: {focus_1}. Usa il grassetto per i concetti chiave."
             )
-            task_normativo = (
-                "Sei un Esperto di Normativa Scolastica e inclusione (BES/DSA).",
-                f"Analizza il tema '{tema}' dal punto di vista normativo, dei diritti e dell'inclusione nella scuola italiana. Usa il grassetto."
+            task_2 = (
+                f"Sei un esperto focalizzato su: {focus_2}.",
+                f"Analizza il tema '{tema}' approfondendo rigorosamente questo aspetto: {focus_2}. Usa il grassetto per i concetti chiave."
             )
-            task_pratico = (
-                "Sei un Docente Innovatore.",
-                f"Proponi 2 esempi pratici e operativi per applicare '{tema}' direttamente in classe. Usa il grassetto."
+            task_3 = (
+                f"Sei un esperto focalizzato su: {focus_3}.",
+                f"Analizza il tema '{tema}' approfondendo rigorosamente questo aspetto: {focus_3}. Usa il grassetto per i concetti chiave."
             )
 
-            # 2. ESECUZIONE IN PARALLELO REALE CON ThreadPoolExecutor
+            # 2. ESECUZIONE IN PARALLELO REALE
             with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                future_pedagogico = executor.submit(chiama_agente, task_pedagogico[0], task_pedagogico[1], api_key, modello)
-                future_normativo = executor.submit(chiama_agente, task_normativo[0], task_normativo[1], api_key, modello)
-                future_pratico = executor.submit(chiama_agente, task_pratico[0], task_pratico[1], api_key, modello)
+                future_1 = executor.submit(chiama_agente, task_1[0], task_1[1], api_key, modello)
+                future_2 = executor.submit(chiama_agente, task_2[0], task_2[1], api_key, modello)
+                future_3 = executor.submit(chiama_agente, task_3[0], task_3[1], api_key, modello)
 
-                # Raccolta dei risultati non appena completati
-                res_pedagogico = future_pedagogico.result()
-                res_normativo = future_normativo.result()
-                res_pratico = future_pratico.result()
+                res_1 = future_1.result()
+                res_2 = future_2.result()
+                res_3 = future_3.result()
 
-            st.session_state['res_pedagogico'] = res_pedagogico
-            st.session_state['res_normativo'] = res_normativo
-            st.session_state['res_pratico'] = res_pratico
+            st.session_state['res_1'] = res_1
+            st.session_state['res_2'] = res_2
+            st.session_state['res_3'] = res_3
 
-            # 3. FASE DI CONVERGENZA: L'AGENTE EDITOR COORDINATORE
+            # 3. FASE DI CONVERGENZA: L'EDITOR SCRIVE L'ARTICOLO AMPIO ED ESAUSTIVO
             prompt_editor = f"""
-            Sei il Caporedattore e un saggista esperto in educazione. 
-            Hai ricevuto tre contributi paralleli sul tema: "{tema}".
+            Sei un Caporedattore e un saggista di altissimo livello.
+            Hai ricevuto tre ampi contributi specialistici sul tema centrale: "{tema}".
             
-            Contributo Pedagogico:
-            {res_pedagogico}
+            Contributo 1 ({focus_1}):
+            {res_1}
             
-            Contributo Normativo/Inclusivo:
-            {res_normativo}
+            Contributo 2 ({focus_2}):
+            {res_2}
             
-            Contributo Operativo/Pratico:
-            {res_pratico}
+            Contributo 3 ({focus_3}):
+            {res_3}
             
-            Fondi insieme questi tre sguardi e scrivi un ARTICOLO DI SINTESI COMPLETO E ORGANICO (circa 500 parole). 
-            Struttura l'articolo con un titolo principale (#), sottotitoli preceduti da tre cancelletti (###) ed evidenzia i termini importanti con il **grassetto**.
+            Sintetizza, amalgama e sviluppa questi tre contributi in un ARTICOLO AMPIO, ESAUSTIVO E APPROFONDITO (circa 700-800 parole).
+            L'articolo deve essere strutturato professionalmente con:
+            - Un titolo principale (# [Titolo incisivo])
+            - Sottotitoli di sezione preceduti da tre cancelletti (### [Sottotitolo])
+            - Un flusso narrativo coerente che integri perfettamente i tre punti di vista scelti dall'utente.
+            - Termini chiave evidenziati in **grassetto**.
             """
             
-            articolo_finale = chiama_agente(
-                "Sei un editor editoriale di altissimo livello.", 
+            articolo_ampio = chiama_agente(
+                "Sei un editor editoriale d'eccellenza.", 
                 prompt_editor, 
                 api_key, 
                 modello
             )
-            st.session_state['articolo_finale'] = articolo_finale
-            st.success("🎉 Analisi parallele completate e sintetizzate con successo dall'Editor!")
+            st.session_state['articolo_ampio'] = articolo_ampio
+            st.success("🎉 Analisi parallele completate e fuse nell'articolo esaustivo dall'Editor!")
 
 # --- VISUALIZZAZIONE DEI RISULTATI NELL'APP ---
-if 'articolo_finale' in st.session_state:
+if 'articolo_ampio' in st.session_state:
     st.markdown("---")
     
+    # Mostriamo le tre prospettive scelte dall'utente nei rispettivi expander
     col1, col2, col3 = st.columns(3)
     with col1:
-        with st.expander("🧠 Vista Pedagogica"):
-            st.write(st.session_state['res_pedagogico'])
+        with st.expander(f"📌 {focus_1[:25]}..."):
+            st.write(st.session_state['res_1'])
     with col2:
-        with st.expander("⚖️ Vista Normativa"):
-            st.write(st.session_state['res_normativo'])
+        with st.expander(f"📌 {focus_2[:25]}..."):
+            st.write(st.session_state['res_2'])
     with col3:
-        with st.expander("🛠️ Vista Operativa"):
-            st.write(st.session_state['res_pratico'])
+        with st.expander(f"📌 {focus_3[:25]}..."):
+            st.write(st.session_state['res_3'])
 
     st.markdown("---")
-    st.subheader("📰 Articolo di Sintesi Coordinato (Editor)")
-    st.markdown(st.session_state['articolo_finale'])
+    st.subheader("📰 Articolo Saggistico Ampio e Coordinato (Editor)")
+    st.markdown(st.session_state['articolo_ampio'])
 
     # --- GENERAZIONE FILE WORD (.docx) STRUTTURATO ---
     doc = Document()
-    doc.add_heading(f"Report Integrato: {tema}", level=0)
+    doc.add_heading(f"Report ed Analisi Integrata: {tema}", level=0)
     
-    doc.add_heading("1. Sintesi Coordinata (Editor)", level=1)
-    append_markdown_to_docx(doc, st.session_state['articolo_finale'])
+    doc.add_heading("Articolo Saggistico Coordinato", level=1)
+    append_markdown_to_docx(doc, st.session_state['articolo_ampio'])
     
-    doc.add_heading("2. Contributi di Analisi Parallela", level=1)
-    doc.add_heading("Prospettiva Pedagogica", level=2)
-    append_markdown_to_docx(doc, st.session_state['res_pedagogico'])
-    doc.add_heading("Prospettiva Normativa", level=2)
-    append_markdown_to_docx(doc, st.session_state['res_normativo'])
-    doc.add_heading("Prospettiva Operativa", level=2)
-    append_markdown_to_docx(doc, st.session_state['res_pratico'])
+    doc.add_heading("Contributi Specialistici di Partenza", level=1)
+    
+    doc.add_heading(f"1. {focus_1}", level=2)
+    append_markdown_to_docx(doc, st.session_state['res_1'])
+    
+    doc.add_heading(f"2. {focus_2}", level=2)
+    append_markdown_to_docx(doc, st.session_state['res_2'])
+    
+    doc.add_heading(f"3. {focus_3}", level=2)
+    append_markdown_to_docx(doc, st.session_state['res_3'])
 
     bio = io.BytesIO()
     doc.save(bio)
     
     st.download_button(
-        label="📄 Scarica Report Completo in Word (.docx)",
+        label="📄 Scarica Articolo e Report in Word (.docx)",
         data=bio.getvalue(),
-        file_name=f"Report_Parallelo_{tema.replace(' ', '_')}.docx",
+        file_name=f"Articolo_Esaustivo_{tema.replace(' ', '_')}.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
